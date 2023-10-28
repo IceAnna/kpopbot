@@ -1,6 +1,6 @@
 import telebot
 import re
-
+from gpytranslate import SyncTranslator
 subject='select'
 
 API_TOKEN = '6048445093:AAGZIK0JIPJHzdlELYBQw2MzjJUBW5OA2ms'
@@ -25,6 +25,7 @@ def send_welcome(message):
 def echo_message(message):
     global subject
     text= message.text
+    reply = ''
     if subject=='select':
         if text=='1':
             reply='напиши пример,я решу "1024-(356*6/3+1)"'
@@ -33,7 +34,7 @@ def echo_message(message):
             reply='nu sory v ananas idite'
             subject = 'rus'
         elif text=='3':
-            reply='напиши текст на русском,я перведу'
+            reply='напиши текст на русском или на английском,я перведу'
             subject = 'eng'
     elif subject=='math':
         pattern ='^[0-9+-/\*\(\) ]*$'
@@ -41,7 +42,25 @@ def echo_message(message):
             reply = eval(text)
         else:
             reply = 'ERROR 404'
+    elif subject == 'eng':
+        t = SyncTranslator()
+
+        language = t.detect(text)
+        if language=='ru':
+            target='en'
+        else:
+            target='ru'
+        translation = t.translate(text, targetlang=target)
+        reply=f"Перевод: {translation.text}"#\nDetected language: {language}"
+    else:
+        reply= ''
    # reply='vse govoryat '+ message.text+' kupi slon a to arabam sdam'
-    bot.reply_to(message,reply )
+    if reply != '':
+        bot.reply_to(message,reply )
+
+
+bot.set_my_commands([
+        telebot.types.BotCommand("/start", 'ВЫБЕРИ ПРЕДМЕТ')
+    ])
 
 bot.infinity_polling()
